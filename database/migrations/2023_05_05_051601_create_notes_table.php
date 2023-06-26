@@ -15,6 +15,7 @@ class CreateNotesTable extends Migration
     {
         Schema::create('notes', function (Blueprint $table) {
             $table->id();
+            $table->unsignedBigInteger('index')->nullable();
             $table->string('title')->nullable();
             $table->text('content')->nullable();
             $table->integer('is_check_box_or_content')->unsigned();

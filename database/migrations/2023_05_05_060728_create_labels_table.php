@@ -16,6 +16,9 @@ class CreateLabelsTable extends Migration
         Schema::create('labels', function (Blueprint $table) {
             $table->id();
             $table->string('title')->nullable();
+            $table->unsignedBigInteger('user_id')->unsigned();
+            $table->foreign('user_id')->references('id')
+                ->on('users')->onDelete('cascade');
             $table->timestamps();
         });
     }
