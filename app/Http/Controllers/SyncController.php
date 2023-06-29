@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Label;
+use App\Models\Note;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
@@ -20,10 +22,17 @@ class SyncController extends Controller
     {
         $tables = ['users', 'notes', 'images', 'files', 'labels', 'note_has_label', 'note_has_user'];
 
+        $userId = Auth::user()->id;
         $response = [];
         foreach ($tables as $table) {
             if ($table == 'notes') {
-                $tableData = DB::table('notes')->where('user_id', Auth::user()->id)->get();
+                $tableData = Note::with('users')->whereHas('users', function ($query) use ($userId) {
+                    $query->where('user_id', $userId);
+                })->get();
+
+                $response[$table] = $tableData;
+            } else if ($table == 'labels') {
+                $tableData = DB::table('labels')->where('user_id', $userId)->get();
                 $response[$table] = $tableData;
             } else {
                 $tableData = DB::table($table)->get();
@@ -71,6 +80,68 @@ class SyncController extends Controller
 //
 //
 //        }
+
+        return response()->json(['message' => 'Upload successful']);
+    }
+
+    public function storeLabel(Request $request)
+    {
+        $userId = Auth::user()->id;
+        Label::where('user_id', $userId)->delete();
+        $labels = $request->input('labels');
+
+        foreach ($labels as $label) {
+            $lb = new Label();
+            $lb->title = $label['title'];
+            $lb->user_id = $userId;
+            $lb->save();
+        }
+
+        return response()->json(['message' => 'Upload successful']);
+    }
+
+    public function storeNote(Request $request)
+    {
+        Auth::user()->userNotes()->delete();
+        $notes = $request->input('notes');
+
+        foreach ($notes as $note) {
+            $nt = new Note();
+            $nt->index = $note['index'];
+            $nt->title = $note['title'];
+            $nt->content = $note['content'];
+            $nt->is_check_box_or_content = $note['isCheckBoxOrContent'];
+            $nt->deadline = $note['deadline'] != "" ? $note['deadline'] : null;
+            $nt->color = $note['color'];
+            $nt->background = $note['background'];
+            $nt->archive = $note['archive'];
+            $nt->user_id = $note['userId'];
+            $nt->save();
+
+            $user = User::find($note['userId']);
+            $user->notes()->attach(Note::find($nt->id));
+
+            foreach ($request->input('note_has_user') as $notehas) {
+                if ($notehas['user_id'] != $note['userId']) {
+                    if ($notehas['note_id'] == $note['id']) {
+                        $user = User::find($notehas['user_id']);
+                        $user->notes()->attach(Note::find($nt->id));
+                    }
+                }
+            }
+
+        }
+
+        return response()->json(['message' => 'Upload successful']);
+    }
+
+    public function storeNoteHasUser(Request $request)
+    {
+        $userid = $request->input('user_id');
+        $noteid = $request->input('note_id');
+        $user = User::find($userid);
+
+        $user->notes()->attach(Note::find($noteid));
 
         return response()->json(['message' => 'Upload successful']);
     }

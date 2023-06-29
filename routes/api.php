@@ -27,5 +27,7 @@ Route::prefix('auth')->group(function () {
 Route::prefix('sync')->group(function () {
     Route::get('', [\App\Http\Controllers\SyncController::class,'index'])->middleware('auth:sanctum');
     Route::post('user', [\App\Http\Controllers\SyncController::class,'storeUser'])->middleware('auth:sanctum');
-//    Route::post('logout', [\App\Http\Controllers\UserController::class,'logout'])->middleware('auth:sanctum');
+    Route::post('label', [\App\Http\Controllers\SyncController::class,'storeLabel'])->middleware('auth:sanctum');
+    Route::post('note', [\App\Http\Controllers\SyncController::class,'storeNote'])->middleware('auth:sanctum');
+    Route::post('note-has-user', [\App\Http\Controllers\SyncController::class,'storeNoteHasUser'])->middleware('auth:sanctum');
 });

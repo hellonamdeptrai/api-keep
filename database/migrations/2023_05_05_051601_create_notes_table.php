@@ -18,10 +18,11 @@ class CreateNotesTable extends Migration
             $table->unsignedBigInteger('index')->nullable();
             $table->string('title')->nullable();
             $table->text('content')->nullable();
-            $table->integer('is_check_box_or_content')->unsigned();
+            $table->integer('is_check_box_or_content')->unsigned()->nullable();
             $table->dateTime('deadline')->nullable();
             $table->string('color')->nullable();
             $table->string('background')->nullable();
+            $table->integer('archive')->nullable();
             $table->unsignedBigInteger('user_id')->unsigned();
             $table->foreign('user_id')->references('id')
                 ->on('users')->onDelete('cascade');
